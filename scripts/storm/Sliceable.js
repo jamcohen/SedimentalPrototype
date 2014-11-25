@@ -4,13 +4,13 @@ function Sliceable(xPos, yPos, points, velocity, anchorPoints){
     this.sprite = game.add.sprite(xPos, yPos);
     this.shape = game.add.graphics();
     this.sprite.addChild(this.shape);
-    game.physics.p2.enable(this.sprite, Phaser.Physics.P2JS, true);
-    
+    game.physics.enable(this.sprite, Phaser.Physics.P2JS, false);
+    console.log(this.sprite.body.debugBody);
     this.setAnchorPoints(anchorPoints);
     
     this.points = points;
     this.active = false;
-    
+        
     this.refresh(velocity);
     sliceables.push(this);
 }
@@ -60,7 +60,7 @@ Sliceable.prototype.slice = function(x1, y1, x2, y2){
         for(var j=0; j<this.anchorPoints.length; j++){
             if(PolyK.ContainsPoint(splitPolys[i], anchorPointCopy[j].x, anchorPointCopy[j].y)){
                 console.log(i, anchorPointCopy[j].x, anchorPointCopy[j].y, this);
-                anchorPoints.push(anchorPointCopy[j]);
+                anchorPoints.push(new Phaser.Point(anchorPointCopy[j].x, anchorPointCopy[j].y));
             }
         }
         
@@ -77,7 +77,7 @@ Sliceable.prototype.slice = function(x1, y1, x2, y2){
             this.sprite.y += centroid.y;
             //force rotation to 0
             this.sprite.rotation = 0;
-            game.physics.p2.enable(this.sprite, Phaser.Physics.P2JS, true);
+            game.physics.enable(this.sprite, Phaser.Physics.P2JS);
             
             this.setAnchorPoints(anchorPoints);
             
@@ -124,7 +124,7 @@ Sliceable.prototype.draw = function(){
     }
 
     this.shape.lineTo(this.points[0], this.points[1]);
-    this.shape.endFill();
+    //this.shape.endFill();
     
     // Now change colour to green and 100% opacity/alpha
     //this.shape.beginFill(0x00ff00, 1.0);
@@ -137,6 +137,6 @@ Sliceable.prototype.draw = function(){
 
         // Draw circle about screen's center, with 200 pixels radius
         this.shape.drawCircle(this.anchorPoints[i].x, this.anchorPoints[i].y, 3);
-        this.shape.endFill();
+        //this.shape.endFill();
     }
 }

@@ -2,7 +2,7 @@ var sliceables = [];
 var game;
 window.onload = function () {
 
-    game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update});
+    game = new Phaser.Game(800, 600, Phaser.CANVAS, '', { preload: preload, create: create, update: update});
     var cursors;
     var ledge;
     var player;
@@ -28,6 +28,10 @@ window.onload = function () {
         
         var points = [-100, 30, 100, 30, 100, -30, -100, -30];
         var poly = new Sliceable(400,500, points, undefined, anchorPoints);
+        poly.active = true;
+        
+        var points = [-100, 30, 100, 30, 100, -30, -100, -30];
+        var poly = new Sliceable(400,200, points, undefined, [new Phaser.Point(-90,0), new Phaser.Point(90,0)]);
         poly.active = true;
         
         player = new Player(100,100);
@@ -80,8 +84,8 @@ function slice(x1, y1, x2, y2){
 
 function initPhysics(){
       game.physics.startSystem(Phaser.Physics.P2JS);
-      game.physics.p2.gravity.y = 0;//500;
-     game.physics.p2.restitution = 0.0;
+      game.physics.p2.gravity.y = 500;
+      game.physics.p2.restitution = 0.0;
 }
 
 //finds the average of a group of points

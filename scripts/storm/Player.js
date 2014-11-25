@@ -1,13 +1,13 @@
 var numPlayers = 0;
 function Player(xPos, yPos){
-    this.sprite = game.add.sprite(xPos, yPos);
+    this.sprite = game.add.sprite(xPos, yPos, 'player');
     this.sprite.width = 50;
     this.sprite.height = 50;
     
     this.maxSpeed = 500;
     this.ruler = new Ruler(this.sprite);
     
-    game.physics.p2.enable(this.sprite, Phaser.Physics.P2JS, true);
+    game.physics.p2.enable(this.sprite, Phaser.Physics.P2JS);
     this.sprite.body.fixedRotation = true;
     this.sprite.body.bounce = new Phaser.Point(0,0);
     
@@ -44,7 +44,7 @@ Player.prototype.update = function(){
     //movement
     if(!this.pad.isDown(Phaser.Gamepad.XBOX360_X)){
         if(this.pad.isDown(Phaser.Gamepad.XBOX360_DPAD_UP) || this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) < -0.1){
-            this.sprite.body.velocity.y -= 20;
+            //this.sprite.body.velocity.y -= 20;
         }
         if(this.pad.isDown(Phaser.Gamepad.XBOX360_DPAD_DOWN) || this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) > 0.1){
             this.sprite.body.velocity.y += 20;
