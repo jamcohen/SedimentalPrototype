@@ -5,9 +5,10 @@ window.onload = function () {
     game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update});
     var cursors;
     var ledge;
+    var player;
     
     function preload () {
-        game.load.image('logo', 'phaser.png');
+        game.load.image('player', 'player.png');
     }
 
     function create () {
@@ -16,15 +17,20 @@ window.onload = function () {
 
         initPhysics();
         
-        var points = [-100, 100, 100, 100, 100, -100, -100, -100];
-        var poly = new Sliceable(400,100, points);
+        var anchorPoints = [new Phaser.Point(0,0)];
+        var points = [-100, 30, 100, 30, 100, -30, -100, -30];
+        var poly = new Sliceable(600,350, points, undefined, anchorPoints);
         poly.active = true;
         
-        poly.sprite.body.destroy();
-        //poly.sprite.rotation = Math.PI/3;
-        game.physics.p2.enable(poly.sprite, Phaser.Physics.P2JS, true);
-        poly.refresh();
+        var points = [-100, 30, 100, 30, 100, -30, -100, -30];
+        var poly = new Sliceable(200,350, points, undefined, anchorPoints);
+        poly.active = true;
         
+        var points = [-100, 30, 100, 30, 100, -30, -100, -30];
+        var poly = new Sliceable(400,500, points, undefined, anchorPoints);
+        poly.active = true;
+        
+        player = new Player(100,100);
         //poly.slice(0,0,800,600);
         cursors = game.input.keyboard.createCursorKeys();
         
@@ -57,129 +63,25 @@ window.onload = function () {
                    sliceables[i].sprite.y += 1;
               }
           }
+          player.update();
     }
 
 };
 
-function slice(){
+function slice(x1, y1, x2, y2){
       for(var i=0; i<sliceables.length; i++){
          if(sliceables[i].active){
-             sliceables[i].slice(-800,-600,800,600);
+             sliceables[i].slice(x1,y1,x2,y2);
          }else{
             sliceables[i].active = true; 
          }
       }
 }
 
-//xPos and yPos are in global space. points is in local.
-function Sliceable(xPos, yPos, points, velocity){    
-    this.sprite = game.add.sprite(xPos, yPos);
-    this.shape = game.add.graphics();
-    this.sprite.addChild(this.shape);
-    game.physics.p2.enable(this.sprite, Phaser.Physics.P2JS, true);
-    
-    this.points = points;
-    this.active = false;
-    
-    this.refresh(velocity);
-    sliceables.push(this);
-}
-
-//arguments are in global space
-Sliceable.prototype.slice = function(x1, y1, x2, y2){
-    console.log("slice");
-    x1 -= this.sprite.x;
-    y1 -= this.sprite.y;
-    x2 -= this.sprite.x;
-    y2 -= this.sprite.y;
-    
-    var angle = this.sprite.rotation;
-    point1 = rotateAround(0, 0, angle, x1, y1, false);
-    point2 = rotateAround(0, 0, angle, x2, y2, false);
-    
-    console.log(point1, point2);
-    
-    //this.sprite.addChild(ruler);
-    var splitPolys = PolyK.Slice(this.points, point1.x, point1.y, point2.x, point2.y);
-    
-    //no new polys were formed.
-    if(splitPolys.length <= 1){
-        return;
-    }
-    var vel = this.sprite.body.data.velocity;
-    var worldPosX = this.sprite.x;
-    var worldPosY = this.sprite.y;
-    for(var i = 0; i<splitPolys.length; ++i){
-        //center = {x:0, y:0};
-        if(PolyK.ContainsPoint(splitPolys[i], 0, 0)){
-            rotatePoints(splitPolys[i], 0, 0, angle, true);
-            var centroid = getCentroid(splitPolys[i]);
-            moveOrigin(splitPolys[i], centroid.x, centroid.y);
-            this.points = splitPolys[i];
-            this.sprite.x += centroid.x;
-            this.sprite.y += centroid.y;
-            
-            //force rotation to 0
-            this.sprite.body.destroy();
-            this.sprite.rotation = 0;
-            game.physics.p2.enable(this.sprite, Phaser.Physics.P2JS, true);
-            
-            this.refresh(vel);
-            continue;
-        }else{
-            rotatePoints(splitPolys[i], 0, 0, angle, true);
-            var centroid = getCentroid(splitPolys[i]);
-            moveOrigin(splitPolys[i], centroid.x, centroid.y);
-            //var newChunk = new Sliceable(worldPosX, worldPosY, splitPolys[i]);
-            console.log(vel);
-            var newChunk = new Sliceable(centroid.x+worldPosX, centroid.y+worldPosY, splitPolys[i]);
-        }
-    }
-    //sliceables[0].shape.clear();
-    //sliceables[1].points = [];
-    //sliceables[1].shape.clear();
-    //sliceables[2].shape.clear();
-    console.log(sliceables.length, splitPolys);
-}
-
-//Draws and initializes the physics shapes
-//velocity is an optional argument. Used to allow new slices to preserve their previous velocity
-Sliceable.prototype.refresh = function(velocity){
-    //velocity = (typeof velocity !== 'undefined') ? velocity : {x:0, y:0}; //sets 0,0 as default value for velocity
-    
-    this.sprite.body.clearShapes();
-    this.sprite.body.addPolygon({position:[0,0]}, this.points);
-    if(typeof velocity !== 'undefined'){
-        this.sprite.body.data.velocity = velocity;
-    }
-    this.draw();
-}
-
-Sliceable.prototype.draw = function(){
-    this.shape.clear();
-    this.shape.lineStyle(2, 0x0000FF, 1);
-    this.shape.beginFill(0xFFFF0B, 1);
-    
-    this.shape.moveTo(this.points[0], this.points[1]);
-
-    for (var i = 2; i < this.points.length; i += 2)
-    {
-        this.shape.lineTo(this.points[i], this.points[i+1]);
-    }
-
-    this.shape.lineTo(this.points[0], this.points[1]);
-    this.shape.endFill();
-    
-    // Now change colour to green and 100% opacity/alpha
-    this.shape.beginFill(0x00ff00, 1.0);
-
-    // Draw circle about screen's center, with 200 pixels radius
-    this.shape.drawCircle(0, 0, 3);
-}
-
 function initPhysics(){
       game.physics.startSystem(Phaser.Physics.P2JS);
-      game.physics.p2.gravity.y = 100;
+      game.physics.p2.gravity.y = 0;//500;
+     game.physics.p2.restitution = 0.0;
 }
 
 //finds the average of a group of points
@@ -246,6 +148,15 @@ function moveOrigin(points, newOriginX, newOriginY){
     for(var i = 0; i<points.length; i+=2){
         points[i] -= newOriginX;
         points[i+1] -= newOriginY;
+    }
+}
+
+//adjust a group of points to be relative to a new origin
+//points is an array of Phaser.Points
+function moveOriginForPoints(points, newOriginX, newOriginY){
+    for(var i = 0; i<points.length; i++){
+        points[i].x -= newOriginX;
+        points[i].y -= newOriginY;
     }
 }
 

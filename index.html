@@ -4,8 +4,20 @@
         <meta charset="UTF-8" />
         <title>hello phaser!</title>
         <script src="scripts/engine/polyk.js"></script>
+        
         <script src="scripts/engine/phaser.min.js"></script>
         <script src="scripts/engine/phaser.js"></script>
+        <script src="scripts/storm/Ruler.js"></script>
+        <script src="scripts/storm/Player.js"></script>
+        <script src="scripts/storm/Sliceable.js"></script>
         <script src="scripts/storm/main.js"></script>
+        
+        <script>
+            window.addEventListener("gamepadconnected", function(e) {
+              console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+              e.gamepad.index, e.gamepad.id,
+              e.gamepad.buttons.length, e.gamepad.axes.length);
+            });
+        </script>
     </head>
 </html>
