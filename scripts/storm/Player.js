@@ -5,7 +5,8 @@ function Player(xPos, yPos){
     this.sprite.height = 50;
     
     this.maxSpeed = 500;
-    this.ruler = new Ruler(this.sprite);
+    this.ruler = new Ruler(this.sprite, 300);
+    this.ruler2 = new Ruler(this.sprite, 300);
     
     game.physics.p2.enable(this.sprite, Phaser.Physics.P2JS);
     this.sprite.body.fixedRotation = true;
@@ -42,7 +43,7 @@ Player.prototype.update = function(){
     }
     
     //movement
-    if(!this.pad.isDown(Phaser.Gamepad.XBOX360_X)){
+    if(!this.pad.isDown(Phaser.Gamepad.XBOX360_X) && !this.pad.isDown(Phaser.Gamepad.XBOX360_B)){
         if(this.pad.isDown(Phaser.Gamepad.XBOX360_DPAD_UP) || this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) < -0.1){
             //this.sprite.body.velocity.y -= 20;
         }
@@ -68,6 +69,7 @@ Player.prototype.update = function(){
         var x = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
         var y = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
         this.ruler.updateLine(x,y);
+        
         this.xIsDown = true;
     }else if(this.xIsDown){
         this.ruler.slice();
@@ -76,6 +78,21 @@ Player.prototype.update = function(){
     }else{
         this.ruler.clear();
         this.xIsDown = false;
+    }
+    
+    // launching
+    if (this.pad.isDown(Phaser.Gamepad.XBOX360_B)) {
+        var x = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
+        var y = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
+        this.ruler2.updateLine(x,y);
+        this.bIsDown = true;
+    } else if (this.bIsDown) {
+        this.ruler2.launch();
+        this.ruler2.clear();
+        this.bIsDown = false;
+    }else {
+        this.ruler2.clear();
+        this.bIsDown = false;
     }
 }
 

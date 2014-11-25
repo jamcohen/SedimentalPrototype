@@ -111,10 +111,27 @@ Sliceable.prototype.refresh = function(velocity){
     this.draw();
 }
 
-Sliceable.prototype.draw = function(){
+Sliceable.prototype.raycast = function(x1, y1, x2, y2){
+    x1 -= this.sprite.x;
+    y1 -= this.sprite.y;
+    x2 -= this.sprite.x;
+    y2 -= this.sprite.y;
+    
+    var angle = this.sprite.rotation;
+    point1 = rotateAround(0, 0, angle, x1, y1, false);
+    point2 = rotateAround(0, 0, angle, x2, y2, false);
+    
+    return PolyK.Raycast(this.points, point1.x, point1.y, point2.x, point2.y);
+}
+
+Sliceable.prototype.draw = function(color){
+    if(color == null){ color = 0xFFFF0B;}
+    
+    console.log("color");
+    
     this.shape.clear();
     this.shape.lineStyle(2, 0x0000FF, 1);
-    this.shape.beginFill(0xFFFF0B, 1);
+    this.shape.beginFill(color, 1);
     
     this.shape.moveTo(this.points[0], this.points[1]);
 

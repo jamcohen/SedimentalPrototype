@@ -192,3 +192,9 @@ function getPointsFromFlatArray(points){
     }
     return result;
 }
+
+//vector is in form [x, y]
+function normalize(vector){
+    var magnitude = Math.sqrt((vector[0] * vector[0]) + (vector[1] * vector[1]));
+    return [vector[0]/magnitude, vector[1]/magnitude];
+}
