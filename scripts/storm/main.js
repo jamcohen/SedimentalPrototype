@@ -6,6 +6,7 @@ window.onload = function () {
     var cursors;
     var ledge;
     var player;
+    var player2;
     
     function preload () {
         game.load.image('player', 'player.png');
@@ -18,30 +19,39 @@ window.onload = function () {
         initPhysics();
         
         var anchorPoints = [new Phaser.Point(0,0)];
-        var points = [-100, 30, 100, 30, 100, -30, -100, -30];
-        var poly = new Sliceable(600,350, points, undefined, anchorPoints);
+        var points = [-100, 30, 100, 20, 100, -20, -100, -20];
+        var poly = new Sliceable(550,350, points, undefined, anchorPoints);
         poly.active = true;
         
-        var points = [-100, 30, 100, 30, 100, -30, -100, -30];
-        var poly = new Sliceable(200,350, points, undefined, anchorPoints);
+        var points = [-100, 20, 100, 30, 100, -30, -100, -20];
+        var poly = new Sliceable(250,350, points, undefined, anchorPoints);
         poly.active = true;
         
-        var points = [-100, 30, 100, 30, 100, -30, -100, -30];
+        var points = [-100, 20, 100, 20, 100, -20, -100, -20];
         var poly = new Sliceable(400,500, points, undefined, anchorPoints);
         poly.active = true;
         
-        var points = [-100, 30, 100, 30, 100, -30, -100, -30];
+         var points = [-100, 20, 100, 20, 100, -20, -100, -20];
+        var poly = new Sliceable(120,450, points, undefined, anchorPoints);
+        poly.active = true;
+        
+         var points = [-100, 20, 100, 20, 100, -20, -100, -20];
+        var poly = new Sliceable(650,450, points, undefined, anchorPoints);
+        poly.active = true;
+        
+        var points = [-100, 20, 100, 20, 100, -20, -100, -20];
         var poly = new Sliceable(400,200, points, undefined, [new Phaser.Point(-90,0), new Phaser.Point(90,0)]);
         poly.active = true;
         
-        player = new Player(100,100);
+        var points = [-100, 40, 100, 20, 100, -20, -100, -20];
+        var poly = new Sliceable(150,130, points, undefined, [new Phaser.Point(-90,0), new Phaser.Point(90,0)]);
+        poly.active = true;
+        
+        
+        player = new Player(100,100, 1);
+        player2 = new Player(600, 100, 2);
         //poly.slice(0,0,800,600);
         cursors = game.input.keyboard.createCursorKeys();
-        
-        var ruler = game.add.graphics(0,0);
-        ruler.lineStyle(3, 0x00FF00, 1);
-        ruler.moveTo(0,0);
-        ruler.lineTo(800, 600);
         
         fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
@@ -67,7 +77,9 @@ window.onload = function () {
                    sliceables[i].sprite.y += 1;
               }
           }
-          player.update();
+          
+        player.update();
+        player2.update();
     }
 
 };
@@ -191,10 +203,4 @@ function getPointsFromFlatArray(points){
         result.push({x:points[i], y:points[i+1]});
     }
     return result;
-}
-
-//vector is in form [x, y]
-function normalize(vector){
-    var magnitude = Math.sqrt((vector[0] * vector[0]) + (vector[1] * vector[1]));
-    return [vector[0]/magnitude, vector[1]/magnitude];
 }

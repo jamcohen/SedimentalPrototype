@@ -1,6 +1,7 @@
 //xPos and yPos are in global space. points is in local.
 //anchorPoints is an array of Phaser.Point
-function Sliceable(xPos, yPos, points, velocity, anchorPoints){    
+// tag == 0, no owner; tag == 1, player1, etc.
+function Sliceable(xPos, yPos, points, velocity, anchorPoints, tag){    
     this.sprite = game.add.sprite(xPos, yPos);
     this.shape = game.add.graphics();
     this.sprite.addChild(this.shape);
@@ -9,6 +10,7 @@ function Sliceable(xPos, yPos, points, velocity, anchorPoints){
     this.setAnchorPoints(anchorPoints);
     
     this.points = points;
+    this.tag = 0; // no owner
     this.active = false;
         
     this.refresh(velocity);
@@ -26,6 +28,8 @@ Sliceable.prototype.setAnchorPoints = function(anchorPoints){
 
 //arguments are in global space
 Sliceable.prototype.slice = function(x1, y1, x2, y2){
+    this.tag = 0;
+    
     x1 -= this.sprite.x;
     y1 -= this.sprite.y;
     x2 -= this.sprite.x;
@@ -89,7 +93,7 @@ Sliceable.prototype.slice = function(x1, y1, x2, y2){
             moveOrigin(splitPolys[i], centroid.x, centroid.y);
             moveOriginForPoints(anchorPoints, centroid.x, centroid.y);
             //var newChunk = new Sliceable(worldPosX, worldPosY, splitPolys[i]);
-            var newChunk = new Sliceable(centroid.x+worldPosX, centroid.y+worldPosY, splitPolys[i], null, anchorPoints);
+            var newChunk = new Sliceable(centroid.x+worldPosX, centroid.y+worldPosY, splitPolys[i], null, anchorPoints, 0);
         }
     }
     //sliceables[0].shape.clear();
@@ -111,27 +115,16 @@ Sliceable.prototype.refresh = function(velocity){
     this.draw();
 }
 
-Sliceable.prototype.raycast = function(x1, y1, x2, y2){
-    x1 -= this.sprite.x;
-    y1 -= this.sprite.y;
-    x2 -= this.sprite.x;
-    y2 -= this.sprite.y;
-    
-    var angle = this.sprite.rotation;
-    point1 = rotateAround(0, 0, angle, x1, y1, false);
-    point2 = rotateAround(0, 0, angle, x2, y2, false);
-    
-    return PolyK.Raycast(this.points, point1.x, point1.y, point2.x, point2.y);
-}
-
-Sliceable.prototype.draw = function(color){
-    if(color == null){ color = 0xFFFF0B;}
-    
-    console.log("color");
-    
+Sliceable.prototype.draw = function(){
     this.shape.clear();
     this.shape.lineStyle(2, 0x0000FF, 1);
-    this.shape.beginFill(color, 1);
+
+    if (this.tag == 0)
+        this.shape.beginFill(0xFFFF0B, 1);
+    else if (this.tag == 1)
+        this.shape.beginFill(0xFF0000, 1);
+    else if (this.tag == 2)
+        this.shape.beginFill(0x00FF00, 1);
     
     this.shape.moveTo(this.points[0], this.points[1]);
 
@@ -156,4 +149,17 @@ Sliceable.prototype.draw = function(color){
         this.shape.drawCircle(this.anchorPoints[i].x, this.anchorPoints[i].y, 3);
         //this.shape.endFill();
     }
+}
+
+Sliceable.prototype.raycast = function(x1, y1, x2, y2){
+    x1 -= this.sprite.x;
+    y1 -= this.sprite.y;
+    x2 -= this.sprite.x;
+    y2 -= this.sprite.y;
+    
+    var angle = this.sprite.rotation;
+    point1 = rotateAround(0, 0, angle, x1, y1, false);
+    point2 = rotateAround(0, 0, angle, x2, y2, false);
+    
+    return PolyK.Raycast(this.points, point1.x, point1.y, point2.x, point2.y);
 }

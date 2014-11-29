@@ -1,12 +1,13 @@
 var numPlayers = 0;
-function Player(xPos, yPos){
+function Player(xPos, yPos, tag){
     this.sprite = game.add.sprite(xPos, yPos, 'player');
-    this.sprite.width = 50;
-    this.sprite.height = 50;
+    this.sprite.width = 25;
+    this.sprite.height = 25;
+    this.tag = tag;
     
     this.maxSpeed = 500;
     this.ruler = new Ruler(this.sprite, 300);
-    this.ruler2 = new Ruler(this.sprite, 300);
+    this.ruler2 = new Ruler(this.sprite, 500);
     
     game.physics.p2.enable(this.sprite, Phaser.Physics.P2JS);
     this.sprite.body.fixedRotation = true;
@@ -32,6 +33,7 @@ function Player(xPos, yPos){
     
     this.pad.addCallbacks(this, { onConnect: function(){console.log(this)}});
     this.xIsDown = false;
+    this.bIsDown = false;
     numPlayers++;
 }
 
@@ -48,12 +50,12 @@ Player.prototype.update = function(){
             //this.sprite.body.velocity.y -= 20;
         }
         if(this.pad.isDown(Phaser.Gamepad.XBOX360_DPAD_DOWN) || this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) > 0.1){
-            this.sprite.body.velocity.y += 20;
+            this.sprite.body.velocity.y += 15;
         }
         if(this.pad.isDown(Phaser.Gamepad.XBOX360_DPAD_LEFT) || this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) < -0.1){
-            this.sprite.body.velocity.x -= 20;
+            this.sprite.body.velocity.x -= 15;
         }else if(this.pad.isDown(Phaser.Gamepad.XBOX360_DPAD_RIGHT) || this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) > 0.1){
-            this.sprite.body.velocity.x += 20;
+            this.sprite.body.velocity.x += 15;
         }else{
             this.sprite.body.velocity.x *= 0.90;
         }
@@ -65,6 +67,7 @@ Player.prototype.update = function(){
         this.sprite.body.velocity.x *= 0.96;
     }
     
+    //cutting (resets color to neutral)
     if(this.pad.isDown(Phaser.Gamepad.XBOX360_X)){
         var x = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
         var y = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
@@ -80,14 +83,14 @@ Player.prototype.update = function(){
         this.xIsDown = false;
     }
     
-    // launching
+    // launching (sets color according to player)
     if (this.pad.isDown(Phaser.Gamepad.XBOX360_B)) {
         var x = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
         var y = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
         this.ruler2.updateLine(x,y);
         this.bIsDown = true;
     } else if (this.bIsDown) {
-        this.ruler2.launch();
+        this.ruler2.launch(this.tag);
         this.ruler2.clear();
         this.bIsDown = false;
     }else {
