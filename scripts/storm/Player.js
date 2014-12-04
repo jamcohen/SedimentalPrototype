@@ -1,20 +1,27 @@
 var numPlayers = 0;
+var timer;
 function Player(xPos, yPos, tag){
+    timer = game.time.create(false);
+    
     this.sprite = game.add.sprite(xPos, yPos, 'player');
     this.sprite.width = 25;
     this.sprite.height = 25;
     this.tag = tag;
     
     this.maxSpeed = 500;
+    this.cooldown = 5000;
+    
     this.ruler = new Ruler(this.sprite, 300);
     this.ruler2 = new Ruler(this.sprite, 500);
     
+
     game.physics.p2.enable(this.sprite, Phaser.Physics.P2JS);
     this.sprite.body.fixedRotation = true;
     this.sprite.body.bounce = new Phaser.Point(0,0);
     
     
     this.onGround = false;
+    this.sliceCooldown = true;
     
     game.input.gamepad.start();
     switch(numPlayers){
@@ -68,16 +75,18 @@ Player.prototype.update = function(){
     }
     
     //cutting (resets color to neutral)
-    if(this.pad.isDown(Phaser.Gamepad.XBOX360_X)){
+    if(this.pad.isDown(Phaser.Gamepad.XBOX360_X) && this.sliceCooldown){
         var x = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
         var y = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
         this.ruler.updateLine(x,y);
         
         this.xIsDown = true;
-    }else if(this.xIsDown){
-        this.ruler.slice();
-        this.ruler.clear();
-        this.xIsDown = false;
+    }else if(this.xIsDown && this.sliceCooldown){  
+            game.time.events.add(1000, this.canSlice, this);
+            this.ruler.slice();
+            this.ruler.clear();
+            this.xIsDown = false; 
+            this.sliceCooldown = false;   
     }else{
         this.ruler.clear();
         this.xIsDown = false;
@@ -117,4 +126,10 @@ Player.prototype.canJump = function(){
     
     return result;
 
+}
+
+Player.prototype.canSlice = function(){
+    this.sliceCooldown = true;   
+    console.log("In canSlice(), can slice : " , this.sliceCooldown);
+    return this.sliceCooldown;
 }

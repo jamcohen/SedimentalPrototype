@@ -4,6 +4,7 @@ function Ruler(parent, length){
     this.endpointX = 0;
     this.endpointY = 0;
     this.parent = parent;
+    this.total = 0;
     parent.addChild(this.line);
 }
 
@@ -29,8 +30,8 @@ Ruler.prototype.clear = function(){
     this.line.clear();
 }
 
-Ruler.prototype.slice = function(){
-    slice(this.parent.x, this.parent.y, this.endpointX*this.length+this.parent.x, this.endpointY*this.length+this.parent.y); 
+Ruler.prototype.slice = function(canSlice){
+        slice(this.parent.x, this.parent.y, this.endpointX*this.length+this.parent.x, this.endpointY*this.length+this.parent.y); 
 }
 
 Ruler.prototype.launch = function(playerTag){

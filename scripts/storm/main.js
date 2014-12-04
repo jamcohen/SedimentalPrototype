@@ -18,6 +18,8 @@ window.onload = function () {
 
         initPhysics();
         
+
+        
         var anchorPoints = [new Phaser.Point(0,0)];
         var points = [-100, 30, 100, 20, 100, -20, -100, -20];
         var poly = new Sliceable(550,350, points, undefined, anchorPoints);
@@ -50,6 +52,8 @@ window.onload = function () {
         
         player = new Player(100,100, 1);
         player2 = new Player(600, 100, 2);
+        
+        
         //poly.slice(0,0,800,600);
         cursors = game.input.keyboard.createCursorKeys();
         
