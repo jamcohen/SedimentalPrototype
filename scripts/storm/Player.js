@@ -4,15 +4,21 @@ function Player(xPos, yPos, tag){
     this.sprite.width = 25;
     this.sprite.height = 25;
     this.tag = tag;
+    this.length = 0;
     
     this.maxSpeed = 500;
-    this.ruler = new Ruler(this.sprite, 300);
-    this.ruler2 = new Ruler(this.sprite, 500);
+    
+    this.abilities = [];
+    
+    this.abilities.push(new Slicer(this));
+    this.abilities.push(new Launcher(this));
+    this.abilities.push(new Grabber(this));
+    this.neutralAbility = new Ruler(this);
+    this.currentAbility = this.neutralAbility;
     
     game.physics.p2.enable(this.sprite, Phaser.Physics.P2JS);
     this.sprite.body.fixedRotation = true;
     this.sprite.body.bounce = new Phaser.Point(0,0);
-    
     
     this.onGround = false;
     
@@ -38,14 +44,18 @@ function Player(xPos, yPos, tag){
 }
 
 Player.prototype.update = function(){
+    if(!this.pad.connected) return;
+    
     //console.log(game.input.gamepad.supported, game.input.gamepad.active, game.input.gamepad.pad1.connected);
     //jump
-    if(this.pad.isDown(Phaser.Gamepad.XBOX360_A) && this.canJump()){
+    if((this.pad.isDown(Phaser.Gamepad.XBOX360_A) || this.pad.isDown(Phaser.Gamepad.XBOX360_RIGHT_BUMPER)) && this.canJump()){
         this.sprite.body.velocity.y -= 250;
     }
     
-    //movement
-    if(!this.pad.isDown(Phaser.Gamepad.XBOX360_X) && !this.pad.isDown(Phaser.Gamepad.XBOX360_B)){
+    this.updateAbilities();
+    
+    if(!this.isMovementRestricted()){
+        //movement
         if(this.pad.isDown(Phaser.Gamepad.XBOX360_DPAD_UP) || this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) < -0.1){
             //this.sprite.body.velocity.y -= 20;
         }
@@ -67,35 +77,24 @@ Player.prototype.update = function(){
         this.sprite.body.velocity.x *= 0.96;
     }
     
-    //cutting (resets color to neutral)
-    if(this.pad.isDown(Phaser.Gamepad.XBOX360_X)){
-        var x = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
-        var y = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
-        this.ruler.updateLine(x,y);
-        
-        this.xIsDown = true;
-    }else if(this.xIsDown){
-        this.ruler.slice();
-        this.ruler.clear();
-        this.xIsDown = false;
-    }else{
-        this.ruler.clear();
-        this.xIsDown = false;
-    }
+    var x = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
+    var y = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
+    this.currentAbility.onCharge(x, y);
     
-    // launching (sets color according to player)
-    if (this.pad.isDown(Phaser.Gamepad.XBOX360_B)) {
-        var x = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
-        var y = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
-        this.ruler2.updateLine(x,y);
-        this.bIsDown = true;
-    } else if (this.bIsDown) {
-        this.ruler2.launch(this.tag);
-        this.ruler2.clear();
-        this.bIsDown = false;
-    }else {
-        this.ruler2.clear();
-        this.bIsDown = false;
+    //Only check for new ability presses if there is no currentAbility or the current ability button is not being pressed
+    if(this.currentAbility == this.neutralAbility || !this.pad.getButton(this.currentAbility.button).isDown) {
+        var nextAbility = this.neutralAbility;
+        for(var i=0; i<this.abilities.length; ++i){
+            //console.log(this.abilities);
+            if(this.pad.getButton(this.abilities[i].button).isDown){
+                nextAbility = this.abilities[i];
+            }else if(this.currentAbility == this.abilities[i]){
+                this.currentAbility.onRelease();
+            }
+        }
+        this.switchCurrentAbility(nextAbility);
+        this.currentAbility.updateLine(x, y);
+        this.currentAbility.onPress();
     }
 }
 
@@ -116,5 +115,27 @@ Player.prototype.canJump = function(){
     }
     
     return result;
+}
 
+//ability should be either this.grabber, this.launcher, this.slicer
+Player.prototype.switchCurrentAbility = function(ability){
+    if(ability != this.neutralAbility){
+        this.neutralAbility.line.clear();
+    }
+    this.currentAbility = ability;
+}
+
+Player.prototype.updateAbilities = function(){
+    for(var i=0; i<this.abilities.length; ++i){
+        this.abilities[i].update();
+    }
+}
+
+Player.prototype.isMovementRestricted = function(ability){
+    for(var i=0; i<this.abilities.length; ++i){
+        if(this.abilities[i].restrictMovementIfPressed && this.pad.getButton(this.abilities[i].button).isDown){
+            return true;
+        }
+    }
+    return false;
 }
