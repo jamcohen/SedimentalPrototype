@@ -4,7 +4,6 @@ function Ruler(parent, length){
     this.endpointX = 0;
     this.endpointY = 0;
     this.parent = parent;
-    this.total = 0;
     parent.addChild(this.line);
 }
 
@@ -30,8 +29,8 @@ Ruler.prototype.clear = function(){
     this.line.clear();
 }
 
-Ruler.prototype.slice = function(canSlice){
-        slice(this.parent.x, this.parent.y, this.endpointX*this.length+this.parent.x, this.endpointY*this.length+this.parent.y); 
+Ruler.prototype.slice = function(){
+    slice(this.parent.x, this.parent.y, this.endpointX*this.length+this.parent.x, this.endpointY*this.length+this.parent.y); 
 }
 
 Ruler.prototype.launch = function(playerTag){
@@ -57,4 +56,19 @@ Ruler.prototype.launch = function(playerTag){
         sliceable.draw();
         sliceable.sprite.body.applyForce([-this.endpointX*5000,-this.endpointY*5000], sliceable.sprite.x, sliceable.sprite.y);
     }
+}
+
+Ruler.prototype.getAngle = function(x,y){
+    this.endpointX = x;
+    this.endpointY = y;
+    
+    var xdiff = x*this.length;
+    var ydiff = y*this.length;
+    var angle = ((180/Math.PI) * Math.atan2(ydiff, xdiff));
+    return angle + 90; // In order for thrust to work properly
+    
+    // Our angles produced: Up - -90, Right - 0, Down - 90, Left - 180
+    // Thrust angles: Up - 0, Right - 90, Down - 180, Left - -90
+    
+    
 }

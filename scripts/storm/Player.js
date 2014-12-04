@@ -1,18 +1,16 @@
+
 var numPlayers = 0;
-var timer;
 function Player(xPos, yPos, tag){
-    timer = game.time.create(false);
-    
     this.sprite = game.add.sprite(xPos, yPos, 'player');
     this.sprite.width = 25;
     this.sprite.height = 25;
     this.tag = tag;
     
     this.maxSpeed = 500;
-    this.cooldown = 5000;
+    this.cooldown = 1000;
     
-    this.ruler = new Ruler(this.sprite, 300);
-    this.ruler2 = new Ruler(this.sprite, 500);
+    this.ruler = new Ruler(this.sprite, 300); //slice ruler
+    this.ruler2 = new Ruler(this.sprite, 500); //launch ruler
     
 
     game.physics.p2.enable(this.sprite, Phaser.Physics.P2JS);
@@ -22,6 +20,7 @@ function Player(xPos, yPos, tag){
     
     this.onGround = false;
     this.sliceCooldown = true;
+    this.thrustCooldown = true;
     
     game.input.gamepad.start();
     switch(numPlayers){
@@ -47,22 +46,23 @@ function Player(xPos, yPos, tag){
 Player.prototype.update = function(){
     //console.log(game.input.gamepad.supported, game.input.gamepad.active, game.input.gamepad.pad1.connected);
     //jump
-    if(this.pad.isDown(Phaser.Gamepad.XBOX360_A) && this.canJump()){
-        this.sprite.body.velocity.y -= 250;
+    if(this.pad.isDown(Phaser.Gamepad.PS3XC_X) && this.canJump()){
+        this.sprite.body.moveUp(300);
+       // this.sprite.body.velocity.y -= 150;
     }
     
     //movement
-    if(!this.pad.isDown(Phaser.Gamepad.XBOX360_X) && !this.pad.isDown(Phaser.Gamepad.XBOX360_B)){
-        if(this.pad.isDown(Phaser.Gamepad.XBOX360_DPAD_UP) || this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) < -0.1){
+    if(!this.pad.isDown(Phaser.Gamepad.PS3XC_SQUARE) && !this.pad.isDown(Phaser.Gamepad.PS3XC_CIRCLE)){
+        if(this.pad.isDown(Phaser.Gamepad.PS3XC_DPAD_UP) || this.pad.axis(Phaser.Gamepad.PS3XC_STICK_LEFT_Y) < -0.1){
             //this.sprite.body.velocity.y -= 20;
         }
-        if(this.pad.isDown(Phaser.Gamepad.XBOX360_DPAD_DOWN) || this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) > 0.1){
-            this.sprite.body.velocity.y += 15;
+        if(this.pad.isDown(Phaser.Gamepad.PS3XC_DPAD_DOWN) || this.pad.axis(Phaser.Gamepad.PS3XC_STICK_LEFT_Y) > 0.1){
+            this.sprite.body.velocity.y += 7.5;
         }
-        if(this.pad.isDown(Phaser.Gamepad.XBOX360_DPAD_LEFT) || this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) < -0.1){
-            this.sprite.body.velocity.x -= 15;
-        }else if(this.pad.isDown(Phaser.Gamepad.XBOX360_DPAD_RIGHT) || this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) > 0.1){
-            this.sprite.body.velocity.x += 15;
+        if(this.pad.isDown(Phaser.Gamepad.PS3XC_DPAD_LEFT) || this.pad.axis(Phaser.Gamepad.PS3XC_STICK_LEFT_X) < -0.1){
+            this.sprite.body.velocity.x -= 7.5;
+        }else if(this.pad.isDown(Phaser.Gamepad.PS3XC_DPAD_RIGHT) || this.pad.axis(Phaser.Gamepad.PS3XC_STICK_LEFT_X) > 0.1){
+            this.sprite.body.velocity.x += 7.5;
         }else{
             this.sprite.body.velocity.x *= 0.90;
         }
@@ -74,10 +74,32 @@ Player.prototype.update = function(){
         this.sprite.body.velocity.x *= 0.96;
     }
     
+    //thrusting
+    if (this.pad.justPressed(Phaser.Gamepad.PS3XC_TRIANGLE) && this.thrustCooldown) {
+        var x = this.pad.axis(Phaser.Gamepad.PS3XC_STICK_LEFT_X);
+        var y = this.pad.axis(Phaser.Gamepad.PS3XC_STICK_LEFT_Y);
+        console.log("LS X Y : ", x, " ", y);
+        if (x == false && y == false) ;//do nothing ; Left stick not moving
+        else {
+            this.ruler.updateLine(x,y);
+
+            game.time.events.add(2000, this.canThrust, this); // 2 second cooldown
+            var angle = this.ruler.getAngle(x,y);
+           // console.log("Rotation: ", this.sprite.rotation);
+            console.log("Angle: " , angle);
+           // this.sprite.rotation = angle; //rotate outer box
+            this.sprite.body.angle = angle; //rotate inner box
+            this.sprite.body.thrust(25000);
+            this.thrustCooldown = false;
+            game.time.events.add(500, this.rotateNormal, this);
+        }
+            
+    }
+    
     //cutting (resets color to neutral)
-    if(this.pad.isDown(Phaser.Gamepad.XBOX360_X) && this.sliceCooldown){
-        var x = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
-        var y = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
+    if(this.pad.isDown(Phaser.Gamepad.PS3XC_SQUARE) && this.sliceCooldown){
+        var x = this.pad.axis(Phaser.Gamepad.PS3XC_STICK_LEFT_X);
+        var y = this.pad.axis(Phaser.Gamepad.PS3XC_STICK_LEFT_Y);
         this.ruler.updateLine(x,y);
         
         this.xIsDown = true;
@@ -93,9 +115,9 @@ Player.prototype.update = function(){
     }
     
     // launching (sets color according to player)
-    if (this.pad.isDown(Phaser.Gamepad.XBOX360_B)) {
-        var x = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X);
-        var y = this.pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y);
+    if (this.pad.isDown(Phaser.Gamepad.PS3XC_CIRCLE)) {
+        var x = this.pad.axis(Phaser.Gamepad.PS3XC_STICK_LEFT_X);
+        var y = this.pad.axis(Phaser.Gamepad.PS3XC_STICK_LEFT_Y);
         this.ruler2.updateLine(x,y);
         this.bIsDown = true;
     } else if (this.bIsDown) {
@@ -107,6 +129,7 @@ Player.prototype.update = function(){
         this.bIsDown = false;
     }
 }
+//end of update
 
 Player.prototype.canJump = function(){
     var yAxis = p2.vec2.fromValues(0, 1);
@@ -130,6 +153,14 @@ Player.prototype.canJump = function(){
 
 Player.prototype.canSlice = function(){
     this.sliceCooldown = true;   
-    console.log("In canSlice(), can slice : " , this.sliceCooldown);
     return this.sliceCooldown;
+}
+
+Player.prototype.canThrust = function(){
+    this.thrustCooldown = true;
+    return this.thrustCooldown;
+}
+
+Player.prototype.rotateNormal = function(){
+    this.sprite.body.angle = 0;   
 }
